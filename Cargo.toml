@@ -9,3 +9,7 @@ rayon = "1.12.0"
 
 [workspace]
 members = ["sorted_code"]
+
+[package.metadata.deb]
+depends = "$auto"
+maintainer = "Neniy arsenijkoloskov2563@gmail.com"
