@@ -76,6 +76,8 @@ sorted_fns!(
             MushroomStem => "mushroom_stem",
             Mycelium => "mycelium",
             NetherBrickFence => "nether_brick_fence",
+            NetherBrickStairs => "nether_brick_stairs",
+            NetherBricks => "nether_bricks",
             NetheriteBlock => "netherite_block",
             Netherrack => "netherrack",
             OakButton => "oak_button",

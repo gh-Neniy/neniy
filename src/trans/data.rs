@@ -275,12 +275,14 @@ fn block_data_match<'a>(
     };
 
     sorted_match!(match unit.key.kind {
+        TokenKind::Bottom => node_view.extend(["half", separator, "bottom"]),
         TokenKind::East => node_view.extend(["east", separator, value_for_sides]),
         TokenKind::Lit => node_view.extend(["lit", separator, "true"]),
         TokenKind::North => node_view.extend(["north", separator, value_for_sides]),
         TokenKind::Open => node_view.extend(["open", separator, "true"]),
         TokenKind::Powered => node_view.extend(["powered", separator, "true"]),
         TokenKind::South => node_view.extend(["south", separator, value_for_sides]),
+        TokenKind::Top => node_view.extend(["half", separator, "top"]),
         TokenKind::West => node_view.extend(["west", separator, value_for_sides]),
 
         other_kind => {

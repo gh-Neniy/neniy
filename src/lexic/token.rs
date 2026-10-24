@@ -30,6 +30,7 @@ pub enum TokenKind {
     Block,
     Bold,
     Bossbar,
+    Bottom,
     CanBreak,
     CanPlaceOn,
     Caret,
@@ -153,6 +154,7 @@ pub enum TokenKind {
     Time,
     Title,
     ToColor,
+    Top,
     Tp,
     TpTime,
     Type,
@@ -232,6 +234,8 @@ pub enum TokenKind {
     MushroomStem,
     Mycelium,
     NetherBrickFence,
+    NetherBrickStairs,
+    NetherBricks,
     NetheriteBlock,
     Netherrack,
     OakButton,
@@ -573,6 +577,7 @@ pub fn short_token_kind(token_body: &[u8]) -> TokenKind {
         const BONE: u64 = hash(b"bone");
         const BOOK: u64 = hash(b"book");
         const BOSSBAR: u64 = hash(b"bossbar");
+        const BOTTOM: u64 = hash(b"bottom");
         const BOW: u64 = hash(b"bow");
         const CANDLE: u64 = hash(b"candle");
         const CARET: u64 = hash(b"^");
@@ -723,6 +728,7 @@ pub fn short_token_kind(token_body: &[u8]) -> TokenKind {
         const TILDA: u64 = hash(b"~");
         const TIME: u64 = hash(b"time");
         const TITLE: u64 = hash(b"title");
+        const TOP: u64 = hash(b"top");
         const TO_COLOR: u64 = hash(b"to_color");
         const TP: u64 = hash(b"tp");
         const TP_TIME: u64 = hash(b"tp_time");
@@ -773,6 +779,7 @@ pub fn short_token_kind(token_body: &[u8]) -> TokenKind {
         BONE => Bone,
         BOOK => Book,
         BOSSBAR => Bossbar,
+        BOTTOM => Bottom,
         BOW => Bow,
         CANDLE => Candle,
         CARET => Caret,
@@ -923,6 +930,7 @@ pub fn short_token_kind(token_body: &[u8]) -> TokenKind {
         TILDA => Tilda,
         TIME => Time,
         TITLE => Title,
+        TOP => Top,
         TO_COLOR => ToColor,
         TP => Tp,
         TP_TIME => TpTime,
@@ -1080,6 +1088,8 @@ pub fn long_token_kind(token_body: &[u8]) -> TokenKind {
         b"name_visible" => NameVisible,
         b"natural_regeneration" => NaturalRegeneration,
         b"nether_brick_fence" => NetherBrickFence,
+        b"nether_brick_stairs" => NetherBrickStairs,
+        b"nether_bricks" => NetherBricks,
         b"nether_star" => NetherStar,
         b"netherite_block" => NetheriteBlock,
         b"netherite_hoe" => NetheriteHoe,

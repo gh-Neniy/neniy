@@ -317,9 +317,10 @@ fn capture_data_unit(state: &mut State) -> Result<DataUnit> {
         | Profession | Type => capture_id_item(state),
         Block | Chest | Feet | Head | Item | LeftHand | Legs | Passenger | RightHand
         | SelectedItem => capture_id_with_data_item(state),
-        Crit | East | Hide | InGround | Interaction | Invisible | Invulnerable | Lit | Marker
-        | NameVisible | NoAI | NoDespawn | NoGravity | NoTrade | North | Open | Powered | Shine
-        | Silent | South | Unbreakable | West => Ok(capture_mono_item(state)),
+        Bottom | Crit | East | Hide | InGround | Interaction | Invisible | Invulnerable | Lit
+        | Marker | NameVisible | NoAI | NoDespawn | NoGravity | NoTrade | North | Open
+        | Powered | Shine | Silent | South | Top | Unbreakable | West =>
+            Ok(capture_mono_item(state)),
         Data => capture_data_item(state),
         Enchantments | FromColor | Rotation | ToColor => capture_list_type_item(state),
         Lore | Sign => capture_lore_item(state),
