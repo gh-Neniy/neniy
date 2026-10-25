@@ -25,6 +25,7 @@ sorted_fns!(
             AttackKnockback => "attack_knockback",
             AttackSpeed => "attack_speed",
             MaxHealth => "max_health",
+            Scale => "scale",
             Stability => "knockback_resistance",
 
             _ => {

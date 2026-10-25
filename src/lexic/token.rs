@@ -85,6 +85,7 @@ pub enum TokenKind {
     LeftHandChance,
     Legs,
     LegsChance,
+    Let,
     Level,
     Limit,
     Lit,
@@ -649,6 +650,7 @@ pub fn short_token_kind(token_body: &[u8]) -> TokenKind {
         const LAVA: u64 = hash(b"lava");
         const LEGS: u64 = hash(b"legs");
         const LESS_OPERATOR: u64 = hash(b"<");
+        const LET: u64 = hash(b"let");
         const LEVEL: u64 = hash(b"level");
         const LIGHT: u64 = hash(b"light");
         const LIMIT: u64 = hash(b"limit");
@@ -851,6 +853,7 @@ pub fn short_token_kind(token_body: &[u8]) -> TokenKind {
         LAVA => Lava,
         LEGS => Legs,
         LESS_OPERATOR => LessOperator,
+        LET => Let,
         LEVEL => Level,
         LIGHT => Light,
         LIMIT => Limit,

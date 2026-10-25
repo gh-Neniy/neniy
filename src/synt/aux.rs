@@ -7,19 +7,27 @@ use crate::{
     ErrorKind::Syntax,
     NeniyError, Result,
     lexic::token::{Index, Token, TokenCategory, TokenKind},
+    synt::{Let, data::DataUnit},
 };
 
 #[derive(Debug)]
 pub struct State<'a> {
     tokens: &'a [Token],
+    pub lets: &'a mut Vec<Let>,
     pub source_code: &'a [u8],
     pos: Index,
 }
 
 impl<'a> State<'a> {
-    pub fn new(tokens: &'a [Token], source_code: &'a [u8], pos: Index) -> Self {
+    pub fn new(
+        tokens: &'a [Token],
+        lets: &'a mut Vec<Let>,
+        source_code: &'a [u8],
+        pos: Index,
+    ) -> Self {
         State {
             tokens,
+            lets,
             source_code,
             pos,
         }
@@ -33,7 +41,7 @@ impl<'a> State<'a> {
         self.exceed(0)
     }
 
-    pub fn extract(&self, offset: Index) -> &str {
+    pub fn extract(&self, offset: Index) -> &'a str {
         let token = &self.tokens[(self.pos + offset) as usize].base;
 
         str::from_utf8(&self.source_code[token.start as usize..=token.end as usize]).unwrap()
@@ -44,6 +52,38 @@ impl<'a> State<'a> {
         let end = self.tokens[(self.pos + i2) as usize].base.end as usize;
 
         str::from_utf8(&self.source_code[start..=end]).unwrap()
+    }
+
+    pub fn let_exists(&self, name: &str) -> bool {
+        for let_pair in self.lets.iter() {
+            let let_name = str::from_utf8(
+                &self.source_code[let_pair.base.start as usize..=let_pair.base.end as usize],
+            )
+            .unwrap();
+
+            if name == let_name {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    pub fn search_for_let(&self) -> Option<&[DataUnit]> {
+        let key = self.extract(0);
+
+        for let_pair in self.lets.iter() {
+            let let_name = str::from_utf8(
+                &self.source_code[let_pair.base.start as usize..=let_pair.base.end as usize],
+            )
+            .unwrap();
+
+            if key == let_name {
+                return Some(&let_pair.data);
+            }
+        }
+
+        None
     }
 }
 
@@ -61,7 +101,7 @@ impl<'a> ops::Index<i16> for State<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ListUnit {
     pub key: Token,
     pub value: Token,

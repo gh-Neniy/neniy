@@ -3,6 +3,7 @@ use std::str;
 use sorted_code::{sorted_fns, sorted_match};
 
 use super::{
+    Let,
     aux::{self, List, State},
     data,
     node::{Command, DoubleSelectorNode, Node, SelectorListNode, SelectorTextNode},
@@ -387,6 +388,40 @@ sorted_fns!(
             command: Command::Kill,
             selector,
         })
+    }
+
+    pub fn let_parse(state: &mut State) -> Result<()> {
+        const NAME: &str = "let";
+
+        aux::check_presence(state, 1, "variable name", NAME)?;
+
+        let base = state[0].base;
+        let let_name = state.extract(0);
+
+        if data::capture_data_unit(state).is_ok() || state.let_exists(let_name) {
+            return Err(NeniyError::new(
+                ["invalid variable name \"", let_name, "\" for ", NAME].concat(),
+                Syntax,
+                state.source_code,
+                base.start,
+                base.end,
+            ));
+        }
+
+        aux::check_token(
+            state,
+            1,
+            "equal operator",
+            NAME,
+            make_check_kind!(TokenKind::EqualOperator),
+        )?;
+
+        aux::check_token(state, 1, "start of data", NAME, aux::valid_data)?;
+
+        let data_units = data::parse_data_units(state)?;
+        state.lets.push(Let::new(base, data_units));
+
+        Ok(())
     }
 
     pub fn loot_parse(state: &mut State) -> Result<Node> {

@@ -10,7 +10,7 @@ use crate::{
     lexic::token::{Token, TokenKind},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DataUnit {
     pub key: Token,
     pub value: DataValue,
@@ -24,7 +24,7 @@ impl DataUnit {
 
 pub type Data = Vec<DataUnit>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IdWithData {
     pub data: Data,
     pub id: Token,
@@ -33,7 +33,7 @@ pub struct IdWithData {
 pub type DataPtr = Box<Data>;
 pub type IdWithDataPtr = Box<IdWithData>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum DataValue {
     Nothing,
     Id(Token),
@@ -304,7 +304,7 @@ fn capture_numeric_or_list_item(state: &mut State) -> Result<DataUnit> {
     ))
 }
 
-fn capture_data_unit(state: &mut State) -> Result<DataUnit> {
+pub fn capture_data_unit(state: &mut State) -> Result<DataUnit> {
     use TokenKind::*;
 
     sorted_match!(match state[0].kind {
@@ -322,7 +322,8 @@ fn capture_data_unit(state: &mut State) -> Result<DataUnit> {
         | Powered | Shine | Silent | South | Top | Unbreakable | West =>
             Ok(capture_mono_item(state)),
         Data => capture_data_item(state),
-        Enchantments | FromColor | Rotation | ToColor => capture_list_type_item(state),
+        Enchantments | FromColor | LeftRotation | Rotation | ToColor | Translation =>
+            capture_list_type_item(state),
         Lore | Sign => capture_lore_item(state),
         Name | Text => capture_text_item(state),
         Scale => capture_numeric_or_list_item(state),
@@ -339,7 +340,7 @@ fn capture_data_unit(state: &mut State) -> Result<DataUnit> {
 }
 
 // state[0] == '['
-fn parse_data_units(state: &mut State) -> Result<Vec<DataUnit>> {
+pub fn parse_data_units(state: &mut State) -> Result<Data> {
     let mut units = Vec::new();
 
     *state += 1;
@@ -349,7 +350,14 @@ fn parse_data_units(state: &mut State) -> Result<Vec<DataUnit>> {
             continue;
         }
 
-        units.push(capture_data_unit(state)?);
+        match capture_data_unit(state) {
+            Ok(unit) => units.push(unit),
+            Err(error) => {
+                let let_units = state.search_for_let().ok_or(error)?;
+
+                units.extend_from_slice(let_units);
+            }
+        }
 
         *state += 1;
     }

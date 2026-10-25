@@ -7,7 +7,7 @@ use crate::{
     lexic::token::{BaseToken, TokenKind},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TextUnit {
     pub source: BaseToken,
     pub color: BaseToken,

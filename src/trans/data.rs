@@ -37,11 +37,33 @@ struct Equipment<'a> {
 }
 
 #[derive(Debug)]
+struct Transformation<'a> {
+    left_rotation: Option<&'a [ListUnit]>,
+    scale: Option<&'a [ListUnit]>,
+    translation: Option<&'a [ListUnit]>,
+}
+
+impl<'a> Transformation<'a> {
+    fn new_empty() -> Self {
+        Transformation {
+            left_rotation: None,
+            scale: None,
+            translation: None,
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.left_rotation.is_none() && self.scale.is_none() && self.translation.is_none()
+    }
+}
+
+#[derive(Debug)]
 struct Storage<'a> {
     attributes: Vec<SimpleUnit>,
     equipment: Vec<Equipment<'a>>,
     tags: Vec<Token>,
     chances: Vec<SimpleUnit>,
+    transformation: Transformation<'a>,
 }
 
 fn extract_numeric<'a>(node_view: &NodeView<'a>, value: Token) -> Result<&'a str> {
@@ -419,7 +441,60 @@ fn entity_data_match<'a>(
                 .chances
                 .push(SimpleUnit::new(unit.key, unit.value.as_id()?));
         }
+        LeftRotation => {
+            let left_rotation = unit.value.as_list()?;
+
+            if left_rotation.len() != 4 {
+                return Err(NeniyError::new(
+                    "left_rotation length != 4".to_string(),
+                    ErrorKind::Translation,
+                    node_view.source_code,
+                    unit.key.base.start,
+                    unit.key.base.end,
+                ));
+            }
+
+            storage.transformation.left_rotation = Some(left_rotation);
+        }
+        Scale => {
+            if entity.kind == TokenKind::Shulker {
+                storage
+                    .attributes
+                    .push(SimpleUnit::new(unit.key, unit.value.as_id()?));
+
+                is_changed = true;
+            } else {
+                let scale = unit.value.as_list()?;
+
+                if scale.len() != 3 {
+                    return Err(NeniyError::new(
+                        "scale length != 3".to_string(),
+                        ErrorKind::Translation,
+                        node_view.source_code,
+                        unit.key.base.start,
+                        unit.key.base.end,
+                    ));
+                }
+
+                storage.transformation.scale = Some(scale);
+            }
+        }
         Tag => storage.tags.push(unit.value.as_id()?),
+        Translation => {
+            let translation = unit.value.as_list()?;
+
+            if translation.len() != 3 {
+                return Err(NeniyError::new(
+                    "translation length != 3".to_string(),
+                    ErrorKind::Translation,
+                    node_view.source_code,
+                    unit.key.base.start,
+                    unit.key.base.end,
+                ));
+            }
+
+            storage.transformation.translation = Some(translation);
+        }
 
         other_kind => {
             is_changed = true;
@@ -511,7 +586,7 @@ fn entity_data_match<'a>(
 
                     if !id_with_data.data.is_empty() {
                         node_view.push(',');
-                        translate_entity_data(node_view, entity, &id_with_data.data)?;
+                        translate_entity_data(node_view, id_with_data.id, &id_with_data.data)?;
                     }
 
                     node_view.push_str("}]");
@@ -526,11 +601,6 @@ fn entity_data_match<'a>(
                 Rotation => {
                     node_view.push_str("Rotation:");
                     aux::translate_numeric_list(node_view, unit.value.as_list()?, "f");
-                }
-                Scale => {
-                    node_view.push_str("transformation:{scale:");
-                    aux::translate_numeric_list(node_view, unit.value.as_list()?, "f");
-                    node_view.push('}');
                 }
                 SelectedItem => {
                     node_view.push_str("SelectedItem:");
@@ -774,6 +844,34 @@ fn translate_attribute_modifiers(
     Ok(())
 }
 
+fn translate_transformation(node_view: &mut NodeView, transformation: &Transformation) {
+    node_view.push_str("transformation:{left_rotation:");
+
+    if let Some(left_rotation) = transformation.left_rotation {
+        aux::translate_numeric_list(node_view, left_rotation, "f");
+    } else {
+        node_view.push_str("[0.0f, 0.0f, 0.0f, 1.0f]");
+    }
+
+    node_view.push_str(",scale:");
+
+    if let Some(scale) = transformation.scale {
+        aux::translate_numeric_list(node_view, scale, "f");
+    } else {
+        node_view.push_str("[1.0f, 1.0f, 1.0f]");
+    }
+
+    node_view.push_str(",translation:");
+
+    if let Some(translation) = transformation.translation {
+        aux::translate_numeric_list(node_view, translation, "f");
+    } else {
+        node_view.push_str("[0.0f, 0.0f, 0.0f]");
+    }
+
+    node_view.push_str(",right_rotation:[0.0f, 0.0f, 0.0f, 1.0f]}");
+}
+
 // &[Text] for sign messages
 pub fn translate_block_data<'a>(
     node_view: &mut NodeView,
@@ -815,6 +913,7 @@ pub fn translate_entity_data(
         equipment: Vec::new(),
         tags: Vec::new(),
         chances: Vec::new(),
+        transformation: Transformation::new_empty(),
     };
     let mut with_comma = false;
 
@@ -822,6 +921,14 @@ pub fn translate_entity_data(
         with_comma |= entity_data_match(node_view, entity, unit, &mut storage, with_comma)?;
     }
 
+    if !storage.transformation.is_empty() {
+        if with_comma {
+            node_view.push(',');
+        }
+
+        translate_transformation(node_view, &storage.transformation);
+        with_comma = true;
+    }
     if !storage.attributes.is_empty() {
         if with_comma {
             node_view.push(',');
