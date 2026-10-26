@@ -317,7 +317,7 @@ sorted_fns!(
             ArmorStandBreak => "entity.armor_stand.break",
             ArrowHit => "entity.arrow.hit",
             AxeScrape => "item.axe.scrape",
-            AxeWaxOff => "axe.wax_off",
+            AxeWaxOff => "item.axe.wax_off",
             BasaltBreak => "block.basalt.break",
             BasaltDeltasMood => "ambient.basalt_deltas.mood",
             BeaconActivate => "block.beacon.activate",
