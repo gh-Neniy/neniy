@@ -313,17 +313,17 @@ pub fn capture_data_unit(state: &mut State) -> Result<DataUnit> {
         | RightHandChance | Size | Stability | Stack | TpTime | Width => {
             capture_numeric_item(state)
         }
-        Axis | Billboard | CanBreak | CanPlaceOn | Effect | Facing | LootTable | Potion
-        | Profession | Type => capture_id_item(state),
+        Axis | Billboard | CanPlaceOn | Effect | Facing | LootTable | Potion | Profession
+        | Type => capture_id_item(state),
         Block | Chest | Feet | Head | Item | LeftHand | Legs | Passenger | RightHand
         | SelectedItem => capture_id_with_data_item(state),
         Bottom | Crit | East | Hide | InGround | Interaction | Invisible | Invulnerable | Lit
-        | Marker | NameVisible | NoAI | NoDespawn | NoGravity | NoTrade | North | Open
-        | Powered | Shine | Silent | South | Top | Unbreakable | West =>
+        | Marker | NameVisible | NoAI | NoBottle | NoDespawn | NoGravity | NoTrade | North
+        | Open | Powered | Shine | Silent | South | Top | Unbreakable | West =>
             Ok(capture_mono_item(state)),
-        Data => capture_data_item(state),
-        Enchantments | FromColor | LeftRotation | Rotation | ToColor | Translation =>
+        CanBreak | Enchantments | FromColor | LeftRotation | Rotation | ToColor | Translation =>
             capture_list_type_item(state),
+        Data => capture_data_item(state),
         Lore | Sign => capture_lore_item(state),
         Name | Text => capture_text_item(state),
         Scale => capture_numeric_or_list_item(state),

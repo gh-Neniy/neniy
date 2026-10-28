@@ -655,13 +655,15 @@ fn item_data_match(
     attribute_modifiers: &mut Vec<SimpleUnit>,
     with_comma: bool,
 ) -> Result<bool> {
+    use TokenKind::*;
+
     let mut is_changed = false;
 
     sorted_match!(match unit.key.kind {
-        TokenKind::AttackDamage | TokenKind::AttackSpeed => {
+        AttackDamage | AttackSpeed => {
             attribute_modifiers.push(SimpleUnit::new(unit.key, unit.value.as_id()?))
         }
-        TokenKind::Potion | TokenKind::PotionColor => {
+        Potion | PotionColor => {
             potion_contents.push(SimpleUnit::new(unit.key, unit.value.as_id()?))
         }
 
@@ -673,41 +675,56 @@ fn item_data_match(
             }
 
             sorted_match!(match other_kind {
-                TokenKind::CanBreak => node_view.extend([
-                    "can_break", separator, "{\"blocks\":\"minecraft:", id::block_match(node_view, unit.value.as_id()?)?, "\"}"
-                ]),
-                TokenKind::CanPlaceOn => node_view.extend([
+                CanBreak => {
+                    let blocks = unit.value.as_list()?;
+                    if blocks.is_empty() {
+                        node_view.extend(["can_break", separator, "{\"blocks\":[]}"]);
+                    }
+
+                    node_view.extend(["can_break", separator, "{\"blocks\":["]);
+
+                    let mut iter = blocks.iter();
+                    node_view.extend(["\"minecraft:", id::block_match(node_view, iter.next().unwrap().key)?, "\""]);
+
+                    for block in iter {
+                        node_view.extend([",\"minecraft:", id::block_match(node_view, block.key)?, "\""]);
+                    }
+
+                    node_view.push_str("]}");
+                }
+                CanPlaceOn => node_view.extend([
                     "can_place_on", separator, "{\"blocks\":\"minecraft:", id::block_match(node_view, unit.value.as_id()?)?, "\"}"
                 ]),
-                TokenKind::Enchantments => {
+                Enchantments => {
                     node_view.extend(["enchantments", separator]);
                     translate_enchantments(node_view, unit.value.as_list()?)?;
                 },
-                TokenKind::Hide => node_view.extend([
+                Hide => node_view.extend([
                     "tooltip_display",
                     separator,
                     "{hidden_components:[\"attribute_modifiers\",\"enchantments\",\"unbreakable\",\"can_place_on\",\"can_break\",\"potion_contents\"]}"
                 ]),
-                TokenKind::Lore => {
+                Lore => {
                     node_view.extend(["lore", separator]);
                     text::translate_lore(node_view, unit.value.as_lore()?);
                 },
-                TokenKind::Name => {
+                Name => {
                     node_view.extend(["custom_name", separator]);
                     text::translate_text(node_view, unit.value.as_text()?);
                 },
-                TokenKind::Shine => node_view.extend(["enchantment_glint_override", separator, "1b"]),
-                TokenKind::Stack => node_view.extend(["max_stack_size", separator, node_view.extract(unit.value.as_id()?.base)]),
-                TokenKind::Tag => {
+                NoBottle => node_view.push_str("!minecraft:use_remainder"),
+                Shine => node_view.extend(["enchantment_glint_override", separator, "1b"]),
+                Stack => node_view.extend(["max_stack_size", separator, node_view.extract(unit.value.as_id()?.base)]),
+                Tag => {
                     let custom_data = if separator == "=" { "custom_data" } else { "\"minecraft:custom_data\"" };
 
                     node_view.extend([custom_data, separator, "{tag:", node_view.extract(unit.value.as_id()?.base), "}"]);
                 },
-                TokenKind::Unbreakable => node_view.extend(["unbreakable", separator, "{}"]),
+                Unbreakable => node_view.extend(["unbreakable", separator, "{}"]),
 
                 _ => return Err(NeniyError::new(
                     ["unknown key \"", node_view.extract(unit.key.base), "\" in item data"].concat(),
-                    Translation,
+                    ErrorKind::Translation,
                     node_view.source_code,
                     unit.key.base.start,
                     unit.key.base.end
